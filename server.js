@@ -7,7 +7,12 @@ const mailer = require('./mailer');
 const bookings = require('./bookings');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.options('*', cors());
 
 const PORT = process.env.PORT || 3000;
 
@@ -41,8 +46,8 @@ function getSlotsForDay(locationId, dateStr) {
   if (!hours) return [];
   const slots = [];
   let current = hours.open * 60;
-  const lastStart = hours.close * 60 - (MIN_SLOTS * SLOT_DURATION);
-  while (current <= lastStart) {
+  const closeMin = hours.close * 60;
+  while (current < closeMin) {
     const hh = String(Math.floor(current / 60)).padStart(2, '0');
     const mm = String(current % 60).padStart(2, '0');
     slots.push(`${hh}:${mm}`);
