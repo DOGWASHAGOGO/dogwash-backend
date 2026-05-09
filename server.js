@@ -242,7 +242,7 @@ function cancelPage(errorTitle, errorMsg, showForm, data) {
     bookAgain: 'Erneut buchen'
   } : {
     title: 'Cancel your booking', sure: 'Are you sure you want to cancel this booking?',
-    refundYes: 'You're eligible for a <strong>full refund of €' + booking.total + '</strong> — your appointment is more than 24 hours away.',
+    refundYes: 'You are eligible for a <strong>full refund of €' + booking.total + '</strong> — your appointment is more than 24 hours away.',
     refundNo: 'Your appointment is in less than 24 hours — <strong>no refund</strong> will be issued per our cancellation policy.',
     cancelBtn: 'Yes, cancel my booking', backBtn: '← Keep my booking',
     successMsg: (refunded) => refunded ? 'Your refund of €' + booking.total + ' has been processed and should appear within 5-10 business days.' : 'Your booking has been cancelled. No refund has been issued as per our cancellation policy.',
