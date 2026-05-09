@@ -121,10 +121,11 @@ app.post('/reserve', async (req, res) => {
   const total = price + addonTotal + (extraTime ? 10 : 0);
   const bookingId = uuidv4();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  const lang = req.body.lang || 'en';
   bookings.create({
     id: bookingId, locationId, date, slots: reservedSlots, startTime,
     extraTime: !!extraTime, size, price, addons: addons || [], total,
-    customer, status: 'reserved', expiresAt: expiresAt.toISOString(),
+    customer, lang, status: 'reserved', expiresAt: expiresAt.toISOString(),
     createdAt: new Date().toISOString()
   });
   try {
