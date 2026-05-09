@@ -62,7 +62,8 @@ async function sendCustomerConfirmation(booking) {
           <div style="background:#FFF9E6;border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#555;">
             <strong>Good to know:</strong> Please arrive a couple of minutes early. Everything you need is provided — shampoo, towels, and dryer. Just bring your pup!
           </div>
-          <p style="font-size:13px;color:#888;margin:0;">Need to cancel or reschedule? Just reply to this email.</p>
+          <p style="font-size:13px;color:#888;margin:0;">Need to cancel? You can do so up to 24 hours before your appointment for a full refund.</p>
+          <p style="margin:12px 0 0;"><a href="${process.env.BASE_URL}/cancel/${booking.id}" style="background:#DDECF2;color:#09A6E3;padding:8px 16px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:700;">Cancel booking</a></p>
           <p style="font-size:13px;color:#888;margin:8px 0 0;">See you soon! 🐾</p>
           <p style="font-size:13px;color:#888;margin:4px 0 0;">— The Dog Wash A Go Go team</p>
         </div>
@@ -97,4 +98,30 @@ async function sendOwnerNotification(booking) {
   });
 }
 
-module.exports = { sendCustomerConfirmation, sendOwnerNotification };
+async function sendCancellationConfirmation(booking, refunded) {
+  const d = new Date(booking.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  await sendEmail({
+    to: booking.customer.email,
+    subject: 'Your booking has been cancelled',
+    html: `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1A1A2E;">
+        <div style="background:#09A6E3;padding:28px 32px;border-radius:16px 16px 0 0;">
+          <h1 style="color:white;margin:0;font-size:24px;">DOG WASH A-GO-GO</h1>
+          <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px;">Berlin Neukölln</p>
+        </div>
+        <div style="background:#FEFDF8;padding:28px 32px;border-radius:0 0 16px 16px;border:1px solid #DDECF2;">
+          <h2 style="color:#1A1A2E;margin:0 0 16px;">Booking cancelled</h2>
+          <p style="font-size:14px;color:#555;margin:0 0 16px;">Hi ${booking.customer.firstName}, your booking on <strong>${d} at ${booking.startTime}</strong> has been cancelled.</p>
+          ${refunded
+            ? `<div style="background:#E8F5E9;border-radius:10px;padding:14px 16px;font-size:13px;color:#2E7D32;margin-bottom:16px;">✓ A full refund of <strong>€${booking.total}</strong> has been processed and should appear within 5-10 business days.</div>`
+            : `<div style="background:#FFF3E0;border-radius:10px;padding:14px 16px;font-size:13px;color:#E65100;margin-bottom:16px;">No refund has been issued as the cancellation was made within 24 hours of the appointment.</div>`
+          }
+          <p style="font-size:13px;color:#888;">We hope to see you and your pup again soon!</p>
+          <p style="font-size:13px;color:#888;margin-top:8px;">— The DOG WASH A-GO-GO team</p>
+        </div>
+      </div>
+    `
+  });
+}
+
+module.exports = { sendCustomerConfirmation, sendOwnerNotification, sendCancellationConfirmation };
