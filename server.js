@@ -366,6 +366,34 @@ body{font-family:"Nunito Sans",sans-serif;background:#f0f2f5;min-height:100vh;}
 </style>
 </head>
 <body>
+<script>
+function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  const API = 'https://dogwash-backend.onrender.com';
+  fetch(API + '/admin/login', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({password: pw})
+  }).then(r => r.json()).then(d => {
+    if (d.token) {
+      sessionStorage.setItem('admin_token', d.token);
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-screen').style.display = 'block';
+      window._adminReady && window._adminReady();
+    } else {
+      document.getElementById('login-err').style.display = 'block';
+    }
+  }).catch(() => {
+    document.getElementById('login-err').style.display = 'block';
+  });
+}
+function doLogout() {
+  sessionStorage.removeItem('admin_token');
+  document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('pw-input').value = '';
+}
+</script>
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen" class="login-wrap">
@@ -446,31 +474,6 @@ let allBookings = [];
 let blockedSlots = [];
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
-function doLogin() {
-  const pw = document.getElementById('pw-input').value;
-  fetch(API + '/admin/login', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({password: pw})
-  }).then(r => r.json()).then(d => {
-    if (d.token) {
-      sessionStorage.setItem('admin_token', d.token);
-      showAdmin();
-    } else {
-      document.getElementById('login-err').style.display = 'block';
-    }
-  }).catch(() => {
-    document.getElementById('login-err').style.display = 'block';
-  });
-}
-
-function doLogout() {
-  sessionStorage.removeItem('admin_token');
-  document.getElementById('admin-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('pw-input').value = '';
-}
-
 function getToken() { return sessionStorage.getItem('admin_token'); }
 
 function showAdmin() {
@@ -478,6 +481,8 @@ function showAdmin() {
   document.getElementById('admin-screen').style.display = 'block';
   loadAll();
 }
+
+window._adminReady = function() { loadAll(); };
 
 // Auto-login if token exists
 if (getToken()) showAdmin();
