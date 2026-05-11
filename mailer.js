@@ -52,7 +52,7 @@ function makeGoogleCalendarUrl(booking, lang) {
   const endHour = String(endDate.getHours()).padStart(2,'0') + String(endDate.getMinutes()).padStart(2,'0');
   const title = lang === 'de' ? 'Hundewäsche bei DOG WASH A-GO-GO' : 'Dog wash at DOG WASH A-GO-GO';
   const details = lang === 'de' ? 'Deine Buchung in Neukölln, Berlin' : 'Your booking in Neukölln, Berlin';
-  const location = 'Neukölln, Berlin';
+  const location = 'Hermannstr. 30, 12049 Berlin';
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${date}T${startHour}00/${date}T${endHour}00&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
 }
 
