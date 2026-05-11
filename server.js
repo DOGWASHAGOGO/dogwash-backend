@@ -287,25 +287,21 @@ function cancelPage(errorTitle, errorMsg, showForm, data) {
 const crypto = require('crypto');
 const fs_admin = require('fs');
 const path_admin = require('path');
-const ADMIN_HTML = `
-<!DOCTYPE html>
+const ADMIN_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin — Dog Wash A Go Go</title>
+<title>Admin - Dog Wash A Go Go</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=Nunito+Sans:wght@400;600&display=swap');
-:root{--blue:#09A6E3;--sky:#DDECF2;--cream:#FEFDF8;--yellow:#F4D11A;--pink:#FF9DB4;--dark:#1A1A2E;}
+:root{--blue:#09A6E3;--sky:#DDECF2;--cream:#FEFDF8;--yellow:#F4D11A;--dark:#1A1A2E;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:"Nunito Sans",sans-serif;background:#f0f2f5;min-height:100vh;}
 .topbar{background:var(--blue);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
-.topbar-logo{font-family:"Nunito",sans-serif;font-weight:900;font-size:18px;color:white;letter-spacing:.5px;}
-.topbar-sub{font-size:12px;color:rgba(255,255,255,.7);}
-.logout{background:rgba(255,255,255,.2);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
-.logout:hover{background:rgba(255,255,255,.3);}
-
-/* LOGIN */
+.tlogo{font-family:"Nunito",sans-serif;font-weight:900;font-size:18px;color:white;}
+.tsub{font-size:12px;color:rgba(255,255,255,.7);}
+.btn-logout{background:rgba(255,255,255,.2);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;}
 .login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--cream);}
 .login-box{background:white;border-radius:20px;padding:36px;max-width:360px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08);text-align:center;}
 .login-logo{font-family:"Nunito",sans-serif;font-weight:900;font-size:22px;color:var(--blue);margin-bottom:4px;}
@@ -313,326 +309,233 @@ body{font-family:"Nunito Sans",sans-serif;background:#f0f2f5;min-height:100vh;}
 .login-box input{width:100%;border:2px solid var(--sky);border-radius:11px;padding:11px 14px;font-family:inherit;font-size:14px;outline:none;margin-bottom:12px;}
 .login-box input:focus{border-color:var(--blue);}
 .login-box button{width:100%;padding:13px;border-radius:11px;background:var(--blue);color:white;border:none;font-family:"Nunito",sans-serif;font-weight:900;font-size:16px;cursor:pointer;}
-.login-box button:hover{background:#0790C0;}
-.login-err{color:#e53935;font-size:13px;margin-bottom:10px;}
-
-/* MAIN */
+.login-err{color:#e53935;font-size:13px;margin-bottom:10px;display:none;}
 .main{max-width:900px;margin:0 auto;padding:28px 20px;}
-.section{background:white;border-radius:16px;padding:20px 24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
-.section-title{font-family:"Nunito",sans-serif;font-weight:900;font-size:17px;color:var(--dark);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-.badge{background:var(--blue);color:white;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700;}
-.badge-yellow{background:var(--yellow);color:var(--dark);}
-
-/* DATE NAV */
-.date-nav{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-.date-nav button{background:white;border:2px solid var(--sky);border-radius:9px;width:32px;height:32px;cursor:pointer;font-size:14px;color:var(--blue);display:flex;align-items:center;justify-content:center;}
-.date-nav button:hover{border-color:var(--blue);}
-.date-label{font-family:"Nunito",sans-serif;font-weight:900;font-size:16px;color:var(--dark);}
-.today-btn{background:var(--sky);border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;font-family:inherit;}
-
-/* BOOKING TABLE */
-.booking-table{width:100%;border-collapse:collapse;}
-.booking-table th{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#888;padding:6px 10px;text-align:left;border-bottom:1.5px solid var(--sky);}
-.booking-table td{padding:10px;font-size:13px;color:var(--dark);border-bottom:1px solid #f5f5f5;vertical-align:top;}
-.booking-table tr:last-child td{border-bottom:none;}
-.booking-table tr:hover td{background:#fafafa;}
-.status-confirmed{background:#E8F5E9;color:#2E7D32;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;}
-.status-reserved{background:#FFF9E6;color:#F57F17;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;}
-.status-cancelled{background:#FFEBEE;color:#C62828;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;}
-.empty{text-align:center;padding:32px;color:#888;font-size:14px;}
-
-/* BLOCK SECTION */
-.block-form{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
-.block-form .fr{display:flex;flex-direction:column;gap:4px;}
-.block-form label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;}
-.block-form input,.block-form select{border:2px solid var(--sky);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:13px;outline:none;background:white;}
-.block-form input:focus,.block-form select:focus{border-color:var(--blue);}
-.btn-block{background:#e53935;color:white;border:none;border-radius:10px;padding:10px 18px;font-family:"Nunito",sans-serif;font-weight:900;font-size:14px;cursor:pointer;}
-.btn-block:hover{background:#c62828;}
-.btn-unblock{background:var(--sky);color:var(--blue);border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:6px;}
-.btn-unblock:hover{background:#c5e3ef;}
-.blocked-list{margin-top:14px;}
-.blocked-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#FFF5F5;border-radius:8px;margin-bottom:6px;font-size:13px;color:#C62828;font-weight:600;}
-
-/* UPCOMING */
-.upcoming-day{margin-bottom:14px;}
-.upcoming-day-title{font-family:"Nunito",sans-serif;font-weight:900;font-size:13px;color:var(--blue);margin-bottom:6px;letter-spacing:.3px;}
-
-/* STATS */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
 .stat{background:white;border-radius:14px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
 .stat-num{font-family:"Nunito",sans-serif;font-weight:900;font-size:28px;color:var(--blue);}
 .stat-label{font-size:12px;color:#888;font-weight:600;margin-top:2px;}
+.section{background:white;border-radius:16px;padding:20px 24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.section-title{font-family:"Nunito",sans-serif;font-weight:900;font-size:17px;color:var(--dark);margin-bottom:16px;}
+.date-nav{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.date-nav button{background:white;border:2px solid var(--sky);border-radius:9px;width:32px;height:32px;cursor:pointer;font-size:14px;color:var(--blue);}
+.date-label{font-family:"Nunito",sans-serif;font-weight:900;font-size:16px;color:var(--dark);}
+.today-btn{background:var(--sky);border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#888;padding:6px 10px;text-align:left;border-bottom:1.5px solid var(--sky);}
+td{padding:10px;font-size:13px;color:var(--dark);border-bottom:1px solid #f5f5f5;vertical-align:top;}
+.sc{background:#E8F5E9;color:#2E7D32;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;}
+.sr2{background:#FFF9E6;color:#F57F17;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;}
+.sx{background:#FFEBEE;color:#C62828;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;}
+.empty{text-align:center;padding:32px;color:#888;font-size:14px;}
+.block-form{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;}
+.block-form .fr{display:flex;flex-direction:column;gap:4px;}
+.block-form label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;}
+.block-form input,.block-form select{border:2px solid var(--sky);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:13px;outline:none;}
+.btn-block{background:#e53935;color:white;border:none;border-radius:10px;padding:10px 18px;font-family:"Nunito",sans-serif;font-weight:900;font-size:14px;cursor:pointer;}
+.blocked-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#FFF5F5;border-radius:8px;margin-bottom:6px;font-size:13px;color:#C62828;font-weight:600;}
+.btn-ub{background:#DDECF2;color:var(--blue);border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;}
+.day-title{font-family:"Nunito",sans-serif;font-weight:900;font-size:13px;color:var(--blue);margin:12px 0 6px;}
 </style>
 </head>
 <body>
-<script>
-function doLogin() {
-  const pw = document.getElementById('pw-input').value;
-  const API = 'https://dogwash-backend.onrender.com';
-  fetch(API + '/admin/login', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({password: pw})
-  }).then(r => r.json()).then(d => {
-    if (d.token) {
-      sessionStorage.setItem('admin_token', d.token);
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('admin-screen').style.display = 'block';
-      window._adminReady && window._adminReady();
-    } else {
-      document.getElementById('login-err').style.display = 'block';
-    }
-  }).catch(() => {
-    document.getElementById('login-err').style.display = 'block';
-  });
-}
-function doLogout() {
-  sessionStorage.removeItem('admin_token');
-  document.getElementById('admin-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('pw-input').value = '';
-}
-</script>
 
-<!-- LOGIN SCREEN -->
 <div id="login-screen" class="login-wrap">
   <div class="login-box">
     <div class="login-logo">DOG WASH A-GO-GO</div>
     <div class="login-sub">Admin access</div>
-    <div class="login-err" id="login-err" style="display:none">Wrong password</div>
-    <input type="password" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
-    <button onclick="doLogin()">Log in</button>
+    <div class="login-err" id="login-err">Wrong password</div>
+    <input type="password" id="pw" placeholder="Password">
+    <button id="login-btn">Log in</button>
   </div>
 </div>
 
-<!-- ADMIN SCREEN -->
 <div id="admin-screen" style="display:none">
   <div class="topbar">
-    <div>
-      <div class="topbar-logo">DOG WASH A-GO-GO — Admin</div>
-      <div class="topbar-sub">Neukölln · Station 1</div>
-    </div>
-    <button class="logout" onclick="doLogout()">Log out</button>
+    <div><div class="tlogo">DOG WASH A-GO-GO — Admin</div><div class="tsub">Neukolln - Station 1</div></div>
+    <button class="btn-logout" id="logout-btn">Log out</button>
   </div>
   <div class="main">
-
-    <!-- STATS -->
     <div class="stats">
-      <div class="stat"><div class="stat-num" id="stat-today">—</div><div class="stat-label">Bookings today</div></div>
-      <div class="stat"><div class="stat-num" id="stat-week">—</div><div class="stat-label">This week</div></div>
-      <div class="stat"><div class="stat-num" id="stat-revenue">—</div><div class="stat-label">Revenue this week</div></div>
+      <div class="stat"><div class="stat-num" id="s-today">-</div><div class="stat-label">Bookings today</div></div>
+      <div class="stat"><div class="stat-num" id="s-week">-</div><div class="stat-label">This week</div></div>
+      <div class="stat"><div class="stat-num" id="s-rev">-</div><div class="stat-label">Revenue this week</div></div>
     </div>
-
-    <!-- TODAY'S BOOKINGS -->
     <div class="section">
       <div class="date-nav">
-        <button onclick="shiftDay(-1)">‹</button>
-        <div class="date-label" id="view-date-label"></div>
-        <button onclick="shiftDay(1)">›</button>
-        <button class="today-btn" onclick="goToday()">Today</button>
+        <button id="prev-day">&#8249;</button>
+        <div class="date-label" id="day-label"></div>
+        <button id="next-day">&#8250;</button>
+        <button class="today-btn" id="today-btn">Today</button>
       </div>
       <div id="day-bookings"></div>
     </div>
-
-    <!-- BLOCK SLOTS -->
     <div class="section">
-      <div class="section-title">🚫 Block dates or slots</div>
+      <div class="section-title">Block dates or slots</div>
       <div class="block-form">
-        <div class="fr">
-          <label>Date</label>
-          <input type="date" id="block-date">
-        </div>
-        <div class="fr">
-          <label>Time (optional — leave blank to block whole day)</label>
-          <select id="block-time">
-            <option value="">— Whole day —</option>
-          </select>
-        </div>
-        <div class="fr">
-          <label>Reason (optional)</label>
-          <input type="text" id="block-reason" placeholder="e.g. Maintenance">
-        </div>
-        <button class="btn-block" onclick="blockSlot()">Block</button>
+        <div class="fr"><label>Date</label><input type="date" id="block-date"></div>
+        <div class="fr"><label>Time (blank = whole day)</label><select id="block-time"><option value="">Whole day</option></select></div>
+        <div class="fr"><label>Reason</label><input type="text" id="block-reason" placeholder="e.g. Maintenance"></div>
+        <button class="btn-block" id="block-btn">Block</button>
       </div>
-      <div class="blocked-list" id="blocked-list"></div>
+      <div id="blocked-list"></div>
     </div>
-
-    <!-- UPCOMING -->
     <div class="section">
-      <div class="section-title">📅 Upcoming bookings <span class="badge badge-yellow" id="upcoming-badge">7 days</span></div>
-      <div id="upcoming-bookings"></div>
+      <div class="section-title">Upcoming bookings</div>
+      <div id="upcoming"></div>
     </div>
-
   </div>
 </div>
 
 <script>
-const API = 'https://dogwash-backend.onrender.com';
-let viewDate = new Date();
-let allBookings = [];
-let blockedSlots = [];
+var API = 'https://dogwash-backend.onrender.com';
+var token = sessionStorage.getItem('admin_token');
+var viewDate = new Date();
+var allBookings = [];
+var blocked = [];
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
-function getToken() { return sessionStorage.getItem('admin_token'); }
+// Wire up buttons
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('pw').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+document.getElementById('logout-btn').addEventListener('click', doLogout);
+document.getElementById('prev-day').addEventListener('click', function(){ shiftDay(-1); });
+document.getElementById('next-day').addEventListener('click', function(){ shiftDay(1); });
+document.getElementById('today-btn').addEventListener('click', function(){ viewDate = new Date(); renderDay(); });
+document.getElementById('block-btn').addEventListener('click', blockSlot);
 
-function showAdmin() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('admin-screen').style.display = 'block';
+// Populate time slots
+var sel = document.getElementById('block-time');
+for(var h=10; h<=19; h++){
+  var o1 = document.createElement('option'); o1.value=h+':00'; o1.textContent=h+':00'; sel.appendChild(o1);
+  var o2 = document.createElement('option'); o2.value=h+':30'; o2.textContent=h+':30'; sel.appendChild(o2);
+}
+
+function doLogin(){
+  var pw = document.getElementById('pw').value;
+  fetch(API+'/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d.token){
+      token = d.token;
+      sessionStorage.setItem('admin_token', token);
+      showAdmin();
+    } else {
+      document.getElementById('login-err').style.display='block';
+    }
+  }).catch(function(){ document.getElementById('login-err').style.display='block'; });
+}
+
+function doLogout(){
+  sessionStorage.removeItem('admin_token');
+  token = null;
+  document.getElementById('admin-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('pw').value='';
+}
+
+function showAdmin(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('admin-screen').style.display='block';
   loadAll();
 }
 
-window._adminReady = function() { loadAll(); };
-
-// Auto-login if token exists
-if (getToken()) showAdmin();
-
-// ─── Load data ────────────────────────────────────────────────────────────────
-function loadAll() {
-  const token = getToken();
-  fetch(API + '/admin/bookings', {headers:{'Authorization':'Bearer '+token}})
-    .then(r => r.json()).then(d => {
-      allBookings = d.bookings || [];
-      blockedSlots = d.blocked || [];
-      renderDay();
-      renderStats();
-      renderUpcoming();
-      renderBlocked();
-      populateTimeSlots();
-    });
+function loadAll(){
+  fetch(API+'/admin/bookings',{headers:{'Authorization':'Bearer '+token}})
+  .then(function(r){return r.json();}).then(function(d){
+    allBookings = d.bookings||[];
+    blocked = d.blocked||[];
+    renderStats();
+    renderDay();
+    renderUpcoming();
+    renderBlocked();
+  });
 }
 
-// ─── Stats ────────────────────────────────────────────────────────────────────
-function renderStats() {
-  const today = fmtDate(new Date());
-  const todayB = allBookings.filter(b => b.date === today && b.status === 'confirmed');
-  document.getElementById('stat-today').textContent = todayB.length;
+function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
-  const weekDates = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(); d.setDate(d.getDate() + i);
-    weekDates.push(fmtDate(d));
-  }
-  const weekB = allBookings.filter(b => weekDates.includes(b.date) && b.status === 'confirmed');
-  document.getElementById('stat-week').textContent = weekB.length;
-  const revenue = weekB.reduce((s, b) => s + (b.total || 0), 0);
-  document.getElementById('stat-revenue').textContent = '€' + revenue;
+function renderStats(){
+  var today = fmtDate(new Date());
+  var todayB = allBookings.filter(function(b){return b.date===today && b.status==='confirmed';});
+  document.getElementById('s-today').textContent = todayB.length;
+  var weekDates=[];
+  for(var i=0;i<7;i++){var d=new Date();d.setDate(d.getDate()+i);weekDates.push(fmtDate(d));}
+  var weekB = allBookings.filter(function(b){return weekDates.indexOf(b.date)>-1 && b.status==='confirmed';});
+  document.getElementById('s-week').textContent = weekB.length;
+  document.getElementById('s-rev').textContent = '\u20ac'+weekB.reduce(function(s,b){return s+(b.total||0);},0);
 }
 
-// ─── Day view ─────────────────────────────────────────────────────────────────
-function shiftDay(n) { viewDate.setDate(viewDate.getDate() + n); renderDay(); }
-function goToday() { viewDate = new Date(); renderDay(); }
+function shiftDay(n){ viewDate.setDate(viewDate.getDate()+n); renderDay(); }
 
-function renderDay() {
-  const dateStr = fmtDate(viewDate);
-  const label = viewDate.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-  document.getElementById('view-date-label').textContent = label;
-
-  const dayB = allBookings.filter(b => b.date === dateStr && b.status !== 'expired')
-    .sort((a,b) => a.startTime.localeCompare(b.startTime));
-
-  const el = document.getElementById('day-bookings');
-  if (dayB.length === 0) {
-    el.innerHTML = '<div class="empty">No bookings for this day</div>';
-    return;
-  }
-
-  el.innerHTML = '<table class="booking-table"><thead><tr><th>Time</th><th>Customer</th><th>Dog</th><th>Size</th><th>Add-ons</th><th>Total</th><th>Status</th></tr></thead><tbody>' +
-    dayB.map(b => {
-      const addonNames = {cond:'Conditioner',ear:'Ear cleaner',perf:'Perfume',shed:'De-shedding',lick:'Licky mat',treats:'Treats'};
-      const addons = b.addons && b.addons.length ? b.addons.map(a => addonNames[a.id]||a.id).join(', ') : '—';
-      const statusClass = 'status-' + b.status;
-      return '<tr><td><strong>' + b.startTime + '</strong>' + (b.extraTime ? '<br><small>+30 min</small>' : '') + '</td>' +
-        '<td>' + b.customer.firstName + ' ' + b.customer.lastName + '<br><small style="color:#888">' + b.customer.email + '</small></td>' +
-        '<td>' + (b.customer.dogName || '—') + '</td>' +
-        '<td>' + b.size.charAt(0).toUpperCase() + b.size.slice(1) + '</td>' +
-        '<td style="font-size:12px">' + addons + '</td>' +
-        '<td>€' + b.total + '</td>' +
-        '<td><span class="' + statusClass + '">' + b.status + '</span></td></tr>';
-    }).join('') + '</tbody></table>';
+function renderDay(){
+  var ds = fmtDate(viewDate);
+  document.getElementById('day-label').textContent = viewDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  var dayB = allBookings.filter(function(b){return b.date===ds && b.status!=='expired';}).sort(function(a,b){return a.startTime.localeCompare(b.startTime);});
+  var el = document.getElementById('day-bookings');
+  if(!dayB.length){el.innerHTML='<div class="empty">No bookings for this day</div>';return;}
+  var AN={cond:'Conditioner',ear:'Ear cleaner',perf:'Perfume',shed:'De-shedding',lick:'Licky mat',treats:'Treats'};
+  var rows = dayB.map(function(b){
+    var addons = b.addons&&b.addons.length ? b.addons.map(function(a){return AN[a.id]||a.id;}).join(', ') : '-';
+    var sc = b.status==='confirmed'?'sc':b.status==='reserved'?'sr2':'sx';
+    return '<tr><td><strong>'+b.startTime+'</strong>'+(b.extraTime?'<br><small>+30min</small>':'')+'</td><td>'+b.customer.firstName+' '+b.customer.lastName+'<br><small style="color:#888">'+b.customer.email+'</small></td><td>'+(b.customer.dogName||'-')+'</td><td>'+b.size.charAt(0).toUpperCase()+b.size.slice(1)+'</td><td style="font-size:12px">'+addons+'</td><td>\u20ac'+b.total+'</td><td><span class="'+sc+'">'+b.status+'</span></td></tr>';
+  }).join('');
+  el.innerHTML='<table><thead><tr><th>Time</th><th>Customer</th><th>Dog</th><th>Size</th><th>Add-ons</th><th>Total</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
-// ─── Upcoming ─────────────────────────────────────────────────────────────────
-function renderUpcoming() {
-  const today = fmtDate(new Date());
-  const upcoming = allBookings.filter(b => b.date > today && b.status === 'confirmed')
-    .sort((a,b) => (a.date+a.startTime).localeCompare(b.date+b.startTime));
-
-  const el = document.getElementById('upcoming-bookings');
-  if (upcoming.length === 0) {
-    el.innerHTML = '<div class="empty">No upcoming bookings</div>';
-    return;
-  }
-
-  // Group by date
-  const byDate = {};
-  upcoming.forEach(b => { if (!byDate[b.date]) byDate[b.date] = []; byDate[b.date].push(b); });
-
-  el.innerHTML = Object.keys(byDate).slice(0, 14).map(date => {
-    const label = new Date(date).toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
-    return '<div class="upcoming-day"><div class="upcoming-day-title">' + label + '</div>' +
-      '<table class="booking-table"><thead><tr><th>Time</th><th>Customer</th><th>Dog</th><th>Size</th><th>Total</th></tr></thead><tbody>' +
-      byDate[date].map(b => '<tr><td>' + b.startTime + '</td><td>' + b.customer.firstName + ' ' + b.customer.lastName + '</td><td>' + (b.customer.dogName||'—') + '</td><td>' + b.size.charAt(0).toUpperCase()+b.size.slice(1) + '</td><td>€' + b.total + '</td></tr>').join('') +
-      '</tbody></table></div>';
+function renderUpcoming(){
+  var today = fmtDate(new Date());
+  var up = allBookings.filter(function(b){return b.date>today&&b.status==='confirmed';}).sort(function(a,b){return (a.date+a.startTime).localeCompare(b.date+b.startTime);});
+  var el = document.getElementById('upcoming');
+  if(!up.length){el.innerHTML='<div class="empty">No upcoming bookings</div>';return;}
+  var byDate={};
+  up.forEach(function(b){if(!byDate[b.date])byDate[b.date]=[];byDate[b.date].push(b);});
+  el.innerHTML = Object.keys(byDate).slice(0,14).map(function(date){
+    var label = new Date(date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    var rows = byDate[date].map(function(b){return '<tr><td>'+b.startTime+'</td><td>'+b.customer.firstName+' '+b.customer.lastName+'</td><td>'+(b.customer.dogName||'-')+'</td><td>'+b.size.charAt(0).toUpperCase()+b.size.slice(1)+'</td><td>\u20ac'+b.total+'</td></tr>';}).join('');
+    return '<div class="day-title">'+label+'</div><table><thead><tr><th>Time</th><th>Customer</th><th>Dog</th><th>Size</th><th>Total</th></tr></thead><tbody>'+rows+'</tbody></table>';
   }).join('');
 }
 
-// ─── Block slots ──────────────────────────────────────────────────────────────
-function populateTimeSlots() {
-  const sel = document.getElementById('block-time');
-  sel.innerHTML = '<option value="">— Whole day —</option>';
-  for (let hr = 10; hr <= 19; hr++) {
-    sel.innerHTML += '<option value="' + hr + ':00">' + hr + ':00</option>';
-    sel.innerHTML += '<option value="' + hr + ':30">' + hr + ':30</option>';
-  }
-}
-
-function blockSlot() {
-  const date = document.getElementById('block-date').value;
-  const time = document.getElementById('block-time').value;
-  const reason = document.getElementById('block-reason').value;
-  if (!date) { alert('Please select a date'); return; }
-
-  fetch(API + '/admin/block', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
-    body: JSON.stringify({date, time, reason})
-  }).then(r => r.json()).then(() => {
-    document.getElementById('block-date').value = '';
-    document.getElementById('block-time').value = '';
-    document.getElementById('block-reason').value = '';
+function blockSlot(){
+  var date = document.getElementById('block-date').value;
+  var time = document.getElementById('block-time').value;
+  var reason = document.getElementById('block-reason').value;
+  if(!date){alert('Please select a date');return;}
+  fetch(API+'/admin/block',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({date:date,time:time||null,reason:reason||null})})
+  .then(function(r){return r.json();}).then(function(){
+    document.getElementById('block-date').value='';
+    document.getElementById('block-time').value='';
+    document.getElementById('block-reason').value='';
     loadAll();
   });
 }
 
-function unblockById(btn) { unblock(btn.getAttribute('data-id')); }
-function unblock(id) {
-  fetch(API + '/admin/unblock/' + id, {
-    method: 'DELETE',
-    headers: {'Authorization':'Bearer '+getToken()}
-  }).then(() => loadAll());
+function renderBlocked(){
+  var el = document.getElementById('blocked-list');
+  if(!blocked||!blocked.length){el.innerHTML='<p style="font-size:13px;color:#888">No blocked slots</p>';return;}
+  el.innerHTML = '';
+  blocked.forEach(function(b){
+    var div = document.createElement('div');
+    div.className='blocked-item';
+    var span = document.createElement('span');
+    span.textContent = b.date + (b.time?' at '+b.time:' - whole day') + (b.reason?' ('+b.reason+')':'');
+    var btn = document.createElement('button');
+    btn.className='btn-ub';
+    btn.textContent='Remove';
+    btn.addEventListener('click', function(){ unblock(b.id); });
+    div.appendChild(span);
+    div.appendChild(btn);
+    el.appendChild(div);
+  });
 }
 
-function renderBlocked() {
-  const el = document.getElementById('blocked-list');
-  if (!blockedSlots || blockedSlots.length === 0) {
-    el.innerHTML = '<p style="font-size:13px;color:#888;margin-top:10px;">No blocked slots</p>';
-    return;
-  }
-  el.innerHTML = blockedSlots.map(b =>
-    '<div class="blocked-item"><span>' + b.date + (b.time ? ' at ' + b.time : ' — whole day') + (b.reason ? ' (' + b.reason + ')' : '') + '</span>' +
-    '<button class="btn-unblock" onclick="unblock('' + b.id + '')">Remove</button></div>'
-  ).join('');
+function unblock(id){
+  fetch(API+'/admin/unblock/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token}})
+  .then(function(){loadAll();});
 }
 
-// ─── Utils ────────────────────────────────────────────────────────────────────
-function fmtDate(d) {
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
+if(token) showAdmin();
 </script>
 </body>
-</html>
-`;
+</html>`;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Hermannstr.30';
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'dwagogo-admin-secret-2026';
 const fs = require('fs');
