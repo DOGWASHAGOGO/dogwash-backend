@@ -81,21 +81,32 @@ app.get('/health', (req, res) => {
 app.get('/availability/:locationId/:date', (req, res) => {
   const { locationId, date } = req.params;
   if (!LOCATIONS[locationId]) return res.status(404).json({ error: 'Location not found' });
+
+  // Check if whole day is blocked
+  const blocked = loadBlocked();
+  const dayBlocked = blocked.find(b => b.date === date && !b.time);
+  if (dayBlocked) return res.json({ date, slots: [], closed: true, reason: dayBlocked.reason || 'Closed' });
+
   const allSlots = getSlotsForDay(locationId, date);
   if (allSlots.length === 0) return res.json({ date, slots: [], closed: true });
+
+  // Get blocked time slots for this day
+  const blockedTimes = blocked.filter(b => b.date === date && b.time).map(b => b.time);
+
   const booked = getBookedSlots(locationId, date);
   const stations = LOCATIONS[locationId].stations;
   const slots = allSlots.map((time, idx) => {
-    const available = stations - (booked[time] || 0);
+    const isBlockedTime = blockedTimes.includes(time);
+    const available = isBlockedTime ? 0 : stations - (booked[time] || 0);
     let canBook = available > 0;
     if (canBook) {
       for (let i = 0; i < MIN_SLOTS; i++) {
         const checkSlot = allSlots[idx + i];
-        if (!checkSlot || (stations - (booked[checkSlot] || 0)) <= 0) { canBook = false; break; }
+        if (!checkSlot || blockedTimes.includes(checkSlot) || (stations - (booked[checkSlot] || 0)) <= 0) { canBook = false; break; }
       }
     }
     const extraSlot = allSlots[idx + MIN_SLOTS];
-    const extraAvailable = extraSlot ? (stations - (booked[extraSlot] || 0)) > 0 : false;
+    const extraAvailable = extraSlot && !blockedTimes.includes(extraSlot) ? (stations - (booked[extraSlot] || 0)) > 0 : false;
     return { time, available, canBook, extraAvailable };
   });
   res.json({ date, locationId, slots, closed: false });
