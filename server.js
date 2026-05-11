@@ -605,6 +605,7 @@ function blockSlot() {
   });
 }
 
+function unblockById(btn) { unblock(btn.getAttribute('data-id')); }
 function unblock(id) {
   fetch(API + '/admin/unblock/' + id, {
     method: 'DELETE',
