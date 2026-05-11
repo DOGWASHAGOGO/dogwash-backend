@@ -162,6 +162,20 @@ app.post('/webhook/stripe', async (req, res) => {
         } catch (e) {
           console.error('Email error:', e.message);
         }
+        // Save newsletter signup
+        if (confirmed && confirmed.customer && confirmed.customer.newsletter) {
+          try {
+            const nlFile = (process.env.DATA_FILE || './data/bookings.json').replace('bookings.json', 'newsletter.json');
+            const fs2 = require('fs');
+            let nl = [];
+            if (fs2.existsSync(nlFile)) { try { nl = JSON.parse(fs2.readFileSync(nlFile, 'utf8')); } catch(e){} }
+            const already = nl.find(function(n){ return n.email === confirmed.customer.email; });
+            if (!already) {
+              nl.push({ email: confirmed.customer.email, firstName: confirmed.customer.firstName, lastName: confirmed.customer.lastName, lang: confirmed.lang || 'en', signedUpAt: new Date().toISOString() });
+              fs2.writeFileSync(nlFile, JSON.stringify(nl, null, 2));
+            }
+          } catch(e) { console.error('Newsletter save error:', e.message); }
+        }
       }
     }
   }
@@ -384,6 +398,13 @@ td{padding:10px;font-size:13px;color:var(--dark);border-bottom:1px solid #f5f5f5
       <div class="section-title">Upcoming bookings</div>
       <div id="upcoming"></div>
     </div>
+    <div class="section">
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Newsletter subscribers</span>
+        <button class="today-btn" id="export-btn" style="font-size:12px;">Export CSV</button>
+      </div>
+      <div id="newsletter-list"></div>
+    </div>
   </div>
 </div>
 
@@ -447,6 +468,10 @@ function loadAll(){
     renderDay();
     renderUpcoming();
     renderBlocked();
+  });
+  fetch(API+'/admin/newsletter',{headers:{'Authorization':'Bearer '+token}})
+  .then(function(r){return r.json();}).then(function(d){
+    renderNewsletter(d.subscribers||[]);
   });
 }
 
@@ -533,6 +558,31 @@ function unblock(id){
 }
 
 if(token) showAdmin();
+
+var nlSubscribers = [];
+
+function renderNewsletter(subs) {
+  nlSubscribers = subs;
+  var el = document.getElementById('newsletter-list');
+  if(!subs||!subs.length){el.innerHTML='<div class="empty">No subscribers yet</div>';return;}
+  var rows = subs.map(function(s){
+    return '<tr><td>'+s.firstName+' '+s.lastName+'</td><td>'+s.email+'</td><td>'+s.lang.toUpperCase()+'</td><td style="font-size:11px;color:#888">'+new Date(s.signedUpAt).toLocaleDateString('en-GB')+'</td></tr>';
+  }).join('');
+  el.innerHTML='<p style="font-size:13px;color:#888;margin-bottom:10px;">'+subs.length+' subscriber'+(subs.length===1?'':'s')+'</p><table><thead><tr><th>Name</th><th>Email</th><th>Lang</th><th>Signed up</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+document.getElementById('export-btn').addEventListener('click', function(){
+  if(!nlSubscribers.length){alert('No subscribers yet');return;}
+  var csv = 'First Name,Last Name,Email,Language,Signed Up\n';
+  csv += nlSubscribers.map(function(s){
+    return [s.firstName,s.lastName,s.email,s.lang,new Date(s.signedUpAt).toLocaleDateString('en-GB')].join(',');
+  }).join('\n');
+  var blob = new Blob([csv],{type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'newsletter-subscribers.csv';
+  a.click();
+});
 </script>
 </body>
 </html>`;
@@ -570,6 +620,16 @@ app.post('/admin/login', (req, res) => {
   } else {
     res.status(401).json({ error: 'Wrong password' });
   }
+});
+
+// Get newsletter signups
+app.get('/admin/newsletter', (req, res) => {
+  if (!checkToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const nlFile = (process.env.DATA_FILE || './data/bookings.json').replace('bookings.json', 'newsletter.json');
+  const fs2 = require('fs');
+  let nl = [];
+  if (fs2.existsSync(nlFile)) { try { nl = JSON.parse(fs2.readFileSync(nlFile, 'utf8')); } catch(e){} }
+  res.json({ subscribers: nl });
 });
 
 // Get all bookings + blocked slots

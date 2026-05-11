@@ -42,6 +42,42 @@ function sizeLabel(size, lang) {
   return labels[lang][size] || size;
 }
 
+
+function makeGoogleCalendarUrl(booking, lang) {
+  const date = booking.date.replace(/-/g, '');
+  const startHour = booking.startTime.replace(':', '');
+  const duration = booking.extraTime ? 90 : 60;
+  const endDate = new Date(booking.date + 'T' + booking.startTime + ':00');
+  endDate.setMinutes(endDate.getMinutes() + duration);
+  const endHour = String(endDate.getHours()).padStart(2,'0') + String(endDate.getMinutes()).padStart(2,'0');
+  const title = lang === 'de' ? 'Hundewäsche bei DOG WASH A-GO-GO' : 'Dog wash at DOG WASH A-GO-GO';
+  const details = lang === 'de' ? 'Deine Buchung in Neukölln, Berlin' : 'Your booking in Neukölln, Berlin';
+  const location = 'Neukölln, Berlin';
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${date}T${startHour}00/${date}T${endHour}00&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
+}
+
+function makeICalUrl(booking, lang) {
+  const date = booking.date.replace(/-/g, '');
+  const startHour = booking.startTime.replace(':', '');
+  const duration = booking.extraTime ? 90 : 60;
+  const endDate = new Date(booking.date + 'T' + booking.startTime + ':00');
+  endDate.setMinutes(endDate.getMinutes() + duration);
+  const endHour = String(endDate.getHours()).padStart(2,'0') + String(endDate.getMinutes()).padStart(2,'0');
+  const title = lang === 'de' ? 'Hundewäsche bei DOG WASH A-GO-GO' : 'Dog wash at DOG WASH A-GO-GO';
+  const ical = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'BEGIN:VEVENT',
+    `DTSTART:${date}T${startHour}00`,
+    `DTEND:${date}T${endHour}00`,
+    `SUMMARY:${title}`,
+    'LOCATION:Neukölln\, Berlin',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\n');
+  return `data:text/calendar;charset=utf8,${encodeURIComponent(ical)}`;
+}
+
 async function sendCustomerConfirmation(booking) {
   const lang = booking.lang || 'en';
   const duration = booking.extraTime ? (lang === 'de' ? '1,5 Stunden' : '1.5 hours') : (lang === 'de' ? '1 Stunde' : '1 hour');
@@ -99,7 +135,11 @@ async function sendCustomerConfirmation(booking) {
             <strong>${lang === 'de' ? 'Gut zu wissen:' : 'Good to know:'}</strong> ${T.note}
           </div>
           <p style="font-size:13px;color:#888;margin:0;">${T.cancelText}</p>
-          <p style="margin:12px 0 0;"><a href="${BASE_URL}/cancel/${booking.id}" style="background:#DDECF2;color:#09A6E3;padding:8px 16px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:700;">${T.cancelBtn}</a></p>
+          <p style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="${BASE_URL}/cancel/${booking.id}" style="background:#DDECF2;color:#09A6E3;padding:8px 16px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:700;">${T.cancelBtn}</a>
+            <a href="${makeGoogleCalendarUrl(booking, lang)}" target="_blank" style="background:#E8F5E9;color:#2E7D32;padding:8px 16px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:700;">📅 Google Calendar</a>
+            <a href="${makeICalUrl(booking, lang)}" style="background:#F3E5F5;color:#6A1B9A;padding:8px 16px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:700;">📅 Apple / iCal</a>
+          </p>
           <p style="font-size:13px;color:#888;margin:16px 0 4px;">${T.signoff}</p>
           <p style="font-size:13px;color:#888;margin:0;">${T.team}</p>
         </div>
